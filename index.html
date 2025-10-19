@@ -11,6 +11,7 @@
 
 <div class="container py-4">
 
+  <!-- หัวข้อ -->
   <h1 class="text-center text-danger mb-3">🚨 SOS Tasugete</h1>
 
   <!-- ที่อยู่ -->
@@ -19,7 +20,7 @@
   </div>
 
   <!-- ปุ่มโทรฉุกเฉิน -->
-  <div id="buttonGroup" class="d-grid gap-3 mb-3">
+  <div class="d-grid gap-3 mb-3" id="buttonGroup">
     <button class="btn btn-success btn-lg" onclick="confirmCall('🏥 โรงพยาบาล', '1669')">🏥 โรงพยาบาล (1669)</button>
     <button class="btn btn-primary btn-lg" onclick="confirmCall('👮‍♂️ ตำรวจ', '191')">👮‍♂️ ตำรวจ (191)</button>
     <button class="btn btn-danger btn-lg" onclick="confirmCall('🔥 ไฟไหม้ / ดับเพลิง', '199')">🔥 ไฟไหม้ / ดับเพลิง (199)</button>
@@ -28,19 +29,21 @@
   </div>
 
   <!-- ปุ่มเพิ่มเบอร์ฉุกเฉิน -->
-  <button class="btn btn-danger btn-lg mb-3" onclick="openModal()">➕ เพิ่มเบอร์ฉุกเฉิน</button>
+  <button class="btn btn-dark btn-lg mb-3" onclick="openModal()">➕ เพิ่มเบอร์ฉุกเฉิน</button>
 
-  <!-- ลิงก์โทรแบบซ่อน -->
-  <a id="hiddenCallLink" style="display:none;"></a>
-
-  <!-- Modal เพิ่มเบอร์ฉุกเฉิน -->
-  <div class="modal fade" id="emergencyModal" tabindex="-1" aria-hidden="true">
+  <!-- Modal เพิ่มเบอร์ -->
+  <div class="modal" tabindex="-1" id="modal">
     <div class="modal-dialog">
-      <div class="modal-content p-3">
-        <h5 class="modal-title text-danger">เพิ่มหมายเลขฉุกเฉิน</h5>
-        <input id="emergencyName" class="form-control my-2" placeholder="ชื่อเหตุฉุกเฉิน">
-        <input id="emergencyNumber" class="form-control my-2" placeholder="เบอร์โทร">
-        <div class="d-flex gap-2 justify-content-end">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title text-danger">เพิ่มหมายเลขฉุกเฉิน</h5>
+          <button type="button" class="btn-close" onclick="closeModal()"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" id="emergencyName" class="form-control mb-2" placeholder="ชื่อเหตุฉุกเฉิน">
+          <input type="text" id="emergencyNumber" class="form-control" placeholder="เบอร์โทร">
+        </div>
+        <div class="modal-footer">
           <button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
           <button class="btn btn-danger" onclick="addEmergency()">เพิ่ม</button>
         </div>
@@ -48,49 +51,54 @@
     </div>
   </div>
 
+  <!-- ลิงก์โทรแบบซ่อน -->
+  <a id="hiddenCallLink" style="display:none;"></a>
+
+  <!-- ส่วนท้าย -->
   <footer class="text-center text-secondary mt-4 small">
     หมายเลขฉุกเฉินในประเทศไทย — โทรฟรี 24 ชั่วโมง
   </footer>
 </div>
 
+<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
 function confirmCall(name, number) {
-  if(confirm(`คุณต้องการโทรไปยัง ${name} เบอร์ ${number} หรือไม่?`)) {
+  if (confirm(`คุณต้องการโทรไปยัง ${name} เบอร์ ${number} หรือไม่?`)) {
     const link = document.getElementById("hiddenCallLink");
     link.href = `tel:${number}`;
     link.click();
   }
 }
 
-// Modal control
-const modal = new bootstrap.Modal(document.getElementById('emergencyModal'));
-function openModal() { modal.show(); }
-function closeModal() { modal.hide(); }
+// Modal
+function openModal() { new bootstrap.Modal(document.getElementById('modal')).show(); }
+function closeModal() { bootstrap.Modal.getInstance(document.getElementById('modal')).hide(); }
 
 // เพิ่มเบอร์ฉุกเฉิน
 function addEmergency() {
   const name = document.getElementById('emergencyName').value.trim();
   const number = document.getElementById('emergencyNumber').value.trim();
-  if(!name || !number){ alert('กรุณากรอกชื่อและเบอร์โทรให้ครบ'); return; }
+  if (!name || !number) { alert('กรุณากรอกชื่อและเบอร์โทร'); return; }
 
-  const btn = document.createElement('button');
-  btn.className = 'btn btn-secondary btn-lg';
-  btn.textContent = `${name} (${number})`;
-  btn.onclick = () => confirmCall(name, number);
-  document.getElementById('buttonGroup').appendChild(btn);
+  const buttonGroup = document.getElementById('buttonGroup');
+  const button = document.createElement('button');
+  button.className = 'btn btn-secondary btn-lg';
+  button.textContent = `${name} (${number})`;
+  button.onclick = () => confirmCall(name, number);
+  buttonGroup.appendChild(button);
 
-  closeModal();
   document.getElementById('emergencyName').value = '';
   document.getElementById('emergencyNumber').value = '';
+  closeModal();
 }
 
 // แสดงตำแหน่ง
 async function showLocation() {
   const box = document.getElementById("locationBox");
   if (!navigator.geolocation) {
-    box.className = "alert alert-danger text-center fw-bold";
+    box.className = 'alert alert-danger text-center fw-bold';
     box.innerText = "❗ เบราว์เซอร์นี้ไม่รองรับการระบุตำแหน่ง";
     return;
   }
@@ -98,12 +106,12 @@ async function showLocation() {
   navigator.geolocation.getCurrentPosition(async pos => {
     const lat = pos.coords.latitude;
     const lon = pos.coords.longitude;
-
     try {
-      const res = await fetch(`/reverse?lat=${lat}&lon=${lon}`);
+      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=18`;
+      const res = await fetch(url);
       const data = await res.json();
-
       const addr = data.address || {};
+
       const number = addr.house_number || "";
       const road = addr.road || "";
       const subdistrict = addr.suburb || addr.subdistrict || "";
@@ -111,19 +119,21 @@ async function showLocation() {
       const state = addr.state || "";
       const postcode = addr.postcode || "";
 
-      box.className = "alert alert-success text-center fw-bold";
+      box.className = 'alert alert-success text-center fw-bold';
       box.innerHTML = `📍 คุณอยู่ที่: <b>${number} ${road}, ${subdistrict}, ${district}, ${state} ${postcode}</b>`;
     } catch {
-      box.className = "alert alert-danger text-center fw-bold";
+      box.className = 'alert alert-danger text-center fw-bold';
       box.innerText = "⚠️ ไม่สามารถดึงข้อมูลที่อยู่ได้ (CORS หรือสัญญาณอินเทอร์เน็ต)";
     }
   }, err => {
-    box.className = "alert alert-danger text-center fw-bold";
+    box.className = 'alert alert-danger text-center fw-bold';
     box.innerText = "❌ ไม่สามารถเข้าถึงตำแหน่งได้: " + err.message;
   });
 }
 
+// โหลดหน้า
 window.addEventListener("load", showLocation);
 </script>
+
 </body>
 </html>
