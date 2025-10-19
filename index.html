@@ -11,7 +11,6 @@
 
 <div class="container py-4">
 
-  <!-- หัวข้อ -->
   <h1 class="text-center text-danger mb-3">🚨 SOS Tasugete</h1>
 
   <!-- ที่อยู่ -->
@@ -20,7 +19,7 @@
   </div>
 
   <!-- ปุ่มโทรฉุกเฉิน -->
-  <div class="d-grid gap-3">
+  <div id="buttonGroup" class="d-grid gap-3 mb-3">
     <button class="btn btn-success btn-lg" onclick="confirmCall('🏥 โรงพยาบาล', '1669')">🏥 โรงพยาบาล (1669)</button>
     <button class="btn btn-primary btn-lg" onclick="confirmCall('👮‍♂️ ตำรวจ', '191')">👮‍♂️ ตำรวจ (191)</button>
     <button class="btn btn-danger btn-lg" onclick="confirmCall('🔥 ไฟไหม้ / ดับเพลิง', '199')">🔥 ไฟไหม้ / ดับเพลิง (199)</button>
@@ -28,31 +27,70 @@
     <button class="btn btn-info btn-lg" onclick="confirmCall('🛣️ ตำรวจทางหลวง', '1193')">🛣️ ตำรวจทางหลวง (1193)</button>
   </div>
 
+  <!-- ปุ่มเพิ่มเบอร์ฉุกเฉิน -->
+  <button class="btn btn-danger btn-lg mb-3" onclick="openModal()">➕ เพิ่มเบอร์ฉุกเฉิน</button>
+
   <!-- ลิงก์โทรแบบซ่อน -->
   <a id="hiddenCallLink" style="display:none;"></a>
 
-  <!-- ส่วนท้าย -->
+  <!-- Modal เพิ่มเบอร์ฉุกเฉิน -->
+  <div class="modal fade" id="emergencyModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content p-3">
+        <h5 class="modal-title text-danger">เพิ่มหมายเลขฉุกเฉิน</h5>
+        <input id="emergencyName" class="form-control my-2" placeholder="ชื่อเหตุฉุกเฉิน">
+        <input id="emergencyNumber" class="form-control my-2" placeholder="เบอร์โทร">
+        <div class="d-flex gap-2 justify-content-end">
+          <button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
+          <button class="btn btn-danger" onclick="addEmergency()">เพิ่ม</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <footer class="text-center text-secondary mt-4 small">
     หมายเลขฉุกเฉินในประเทศไทย — โทรฟรี 24 ชั่วโมง
   </footer>
 </div>
 
-<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
 function confirmCall(name, number) {
-  if (confirm(`คุณต้องการโทรไปยัง ${name} เบอร์ ${number} หรือไม่?`)) {
+  if(confirm(`คุณต้องการโทรไปยัง ${name} เบอร์ ${number} หรือไม่?`)) {
     const link = document.getElementById("hiddenCallLink");
     link.href = `tel:${number}`;
     link.click();
   }
 }
 
+// Modal control
+const modal = new bootstrap.Modal(document.getElementById('emergencyModal'));
+function openModal() { modal.show(); }
+function closeModal() { modal.hide(); }
+
+// เพิ่มเบอร์ฉุกเฉิน
+function addEmergency() {
+  const name = document.getElementById('emergencyName').value.trim();
+  const number = document.getElementById('emergencyNumber').value.trim();
+  if(!name || !number){ alert('กรุณากรอกชื่อและเบอร์โทรให้ครบ'); return; }
+
+  const btn = document.createElement('button');
+  btn.className = 'btn btn-secondary btn-lg';
+  btn.textContent = `${name} (${number})`;
+  btn.onclick = () => confirmCall(name, number);
+  document.getElementById('buttonGroup').appendChild(btn);
+
+  closeModal();
+  document.getElementById('emergencyName').value = '';
+  document.getElementById('emergencyNumber').value = '';
+}
+
+// แสดงตำแหน่ง
 async function showLocation() {
   const box = document.getElementById("locationBox");
   if (!navigator.geolocation) {
-    box.classList.replace("alert-warning", "alert-danger");
+    box.className = "alert alert-danger text-center fw-bold";
     box.innerText = "❗ เบราว์เซอร์นี้ไม่รองรับการระบุตำแหน่ง";
     return;
   }
@@ -62,9 +100,7 @@ async function showLocation() {
     const lon = pos.coords.longitude;
 
     try {
-      const proxy = 'https://cors-anywhere.herokuapp.com/';
-      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}&zoom=18`;
-      const res = await fetch(proxy + url);
+      const res = await fetch(`/reverse?lat=${lat}&lon=${lon}`);
       const data = await res.json();
 
       const addr = data.address || {};
@@ -75,20 +111,19 @@ async function showLocation() {
       const state = addr.state || "";
       const postcode = addr.postcode || "";
 
-      box.classList.replace("alert-warning", "alert-success");
+      box.className = "alert alert-success text-center fw-bold";
       box.innerHTML = `📍 คุณอยู่ที่: <b>${number} ${road}, ${subdistrict}, ${district}, ${state} ${postcode}</b>`;
     } catch {
-      box.classList.replace("alert-warning", "alert-danger");
+      box.className = "alert alert-danger text-center fw-bold";
       box.innerText = "⚠️ ไม่สามารถดึงข้อมูลที่อยู่ได้ (CORS หรือสัญญาณอินเทอร์เน็ต)";
     }
   }, err => {
-    box.classList.replace("alert-warning", "alert-danger");
+    box.className = "alert alert-danger text-center fw-bold";
     box.innerText = "❌ ไม่สามารถเข้าถึงตำแหน่งได้: " + err.message;
   });
 }
 
 window.addEventListener("load", showLocation);
 </script>
-
 </body>
 </html>
